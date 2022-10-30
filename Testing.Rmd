@@ -1,0 +1,46 @@
+---
+title: "Test"
+author: "DeepakKalaikadal"
+date: "2022-10-30"
+output: html_document
+---
+
+# Overview
+
+This is the final project for *Practical Machine Learning* course on Coursera. This project will use data collected from fitness devices attached to waist, arm, dumb-bells of 6 participants in order to predict their exercise pattern, defined by the 'classe' variable in the available data. I have decided to use 3 models for training - **Decision Trees, Random Forest, and Gradient Boosted Tree** on the training set. The best model is used to predict a validation set partitioned from the training-data using its accuracy and out-of-sample error rate. The best model is then used to predict 20 cases defined in the Testing set.
+
+## Importing Requisite Libraries
+```{r setup, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set()
+#Importing requisite libraries
+
+library(lattice)
+library(ggplot2)
+library(caret)
+library(kernlab)
+library(rattle)
+library(corrplot)
+set.seed(1358)
+```
+
+## Reading, Cleaning, and Partitioning  the Training Dataset
+
+We will remove variables with little relevance to the predictions, variables with near-zero variance, and columsn with largely N/A entries. We will then partition the training set to give a validation set and a training set.
+
+```{r}
+pml_training <- read.csv("C:/Users/deepa/Downloads/pml-training.csv")
+pml_testing <- read.csv("C:/Users/deepa/Downloads/pml-testing.csv")
+train.raw <- pml_training
+test.raw <- pml_testing
+
+#removing columns with NA > 80%
+train.clean01 <- train.raw[,colMeans(is.na(train.raw)) < .8]
+#removing variables which are time-based, which are irrelevant
+train.clean02 <- train.clean01[,-c(1, grep("timestamp", names(train.clean01)) )]
+#removing near-zero variance variables
+train.clean03 <- train.clean02[,-nearZeroVar(train.clean02)]
+train.clean04 <- train.clean03[,-1]
+#Partitioning the Training-Set to give a Validation-Set
+partition <- createDataPartition(y=train.clean03$classe, p=0.7, list=F)
+train <- train.clean04[partition,]
+valid <- train.clean04[-partition,]
